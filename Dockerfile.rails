@@ -16,6 +16,7 @@ RUN apt-get update -qq && \
     libsqlite3-dev \
     libvips \
     pkg-config \
+    libyaml-dev \
     gnupg2 \
     ca-certificates && \
     apt-get clean && \
