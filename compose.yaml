@@ -1,0 +1,129 @@
+name: mvp-development
+
+services:
+  rails:
+    build:
+      context: .
+      dockerfile: Dockerfile.rails
+      target: development
+      args:
+        RUBY_VERSION: 3.4.5
+        RAILS_VERSION: 8.0.2.1
+        NODE_VERSION: 20
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./railsapp:/app
+      - rails_bundle:/usr/local/bundle
+      - rails_node_modules:/app/node_modules
+      - rails_storage:/app/storage
+      - rails_tmp:/app/tmp
+    environment:
+      - RAILS_ENV=development
+      - DATABASE_URL=sqlite3:db/development.sqlite3
+      - RAILS_LOG_TO_STDOUT=true
+      - RAILS_SERVE_STATIC_FILES=true
+      - SECRET_KEY_BASE=development-secret-key-base-change-in-production
+      - WEB_CONCURRENCY=2
+      - RAILS_MAX_THREADS=5
+    entrypoint: /usr/local/bin/rails-entrypoint.sh
+    command: ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - mvp-network
+    depends_on:
+      - redis
+    stdin_open: true
+    tty: true
+
+  flutter:
+    build:
+      context: .
+      dockerfile: Dockerfile.flutter
+      target: development
+      args:
+        FLUTTER_VERSION: 3.32.5
+    ports:
+      - "8080:8080"
+      - "9100:9100" # Observatory debugger
+    volumes:
+      - ./flutterapp:/app
+      - flutter_pub_cache:/root/.pub-cache
+      - flutter_gradle:/root/.gradle
+    environment:
+      - FLUTTER_ENV=development
+      - API_BASE_URL=http://rails:3000
+      - FLUTTER_WEB_PORT=8080
+      - FLUTTER_WEB_HOSTNAME=0.0.0.0
+    entrypoint: /usr/local/bin/flutter-entrypoint.sh
+    command:
+      [
+        "flutter",
+        "run",
+        "-d",
+        "web-server",
+        "--web-hostname=0.0.0.0",
+        "--web-port=8080",
+      ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - mvp-network
+    stdin_open: true
+    tty: true
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mvp-network
+
+  # 開発用メールキャッチャー
+  mailcatcher:
+    image: schickling/mailcatcher:latest
+    ports:
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP
+    networks:
+      - mvp-network
+
+volumes:
+  rails_bundle:
+    driver: local
+  rails_node_modules:
+    driver: local
+  rails_storage:
+    driver: local
+  rails_tmp:
+    driver: local
+  flutter_pub_cache:
+    driver: local
+  flutter_gradle:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  mvp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
