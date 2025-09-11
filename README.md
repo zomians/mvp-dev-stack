@@ -19,6 +19,8 @@ Rails 8 + Flutter による高速MVP開発環境
 
 ## 🚀 クイックスタート
 
+### アプローチ1: ホスト側で初期化（推奨）
+
 ```bash
 # リポジトリをクローン
 git clone <repository-url>
@@ -27,16 +29,41 @@ cd myapp
 # 環境変数設定
 cp .env.example .env
 
-# 初回セットアップ＆起動（全自動）
+# 初回セットアップ＆起動（ホスト側で生成）
 make quickstart
 ```
 
-これだけで以下が自動実行されます：
-1. Rails/Flutterアプリケーション生成
-2. Dockerイメージビルド
-3. 依存関係インストール
-4. データベース作成・マイグレーション
-5. サービス起動
+### アプローチ2: コンテナ内で初期化
+
+```bash
+# リポジトリをクローン
+git clone <repository-url>
+cd myapp
+
+# 環境変数設定
+cp .env.example .env
+
+# ディレクトリ作成のみ
+make init-container
+
+# entrypoint-v2を使用する場合は、script/配下のファイルを入れ替え
+cp script/rails-entrypoint-v2.sh script/rails-entrypoint.sh
+cp script/flutter-entrypoint-v2.sh script/flutter-entrypoint.sh
+
+# ビルド＆起動（コンテナ内で自動生成）
+make build
+make up
+```
+
+## 🔀 2つのアプローチの違い
+
+| 項目 | アプローチ1（ホスト側） | アプローチ2（コンテナ内） |
+|------|------------------------|-------------------------|
+| **初期化方法** | `make init`でホスト側生成 | コンテナ起動時に自動生成 |
+| **entrypoint** | アプリ存在前提 | アプリなしでも自動生成 |
+| **メリット** | シンプル、高速 | 環境非依存、自動化 |
+| **デメリット** | ホストにRuby/Flutter必要 | 初回起動が遅い |
+| **推奨用途** | 通常の開発 | CI/CD、チーム開発 |
 
 ## 🔗 アクセスURL
 

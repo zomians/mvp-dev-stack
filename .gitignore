@@ -1,0 +1,81 @@
+# 環境変数ファイル
+.env
+.env.*
+!.env.example
+
+# Docker Compose オーバーライド
+compose.override.yaml
+docker-compose.override.yml
+
+# ローカル設定
+.local/
+*.local
+
+# バックアップ
+backups/
+*.backup
+*.bak
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ログファイル
+*.log
+logs/
+
+# 一時ファイル
+tmp/
+temp/
+.cache/
+
+# ビルド成果物
+build/
+dist/
+out/
+
+# 初期化フラグ
+.rails_initialized
+.flutter_initialized
+
+# Rails固有
+railsapp/log/
+railsapp/tmp/
+railsapp/storage/
+railsapp/public/assets/
+railsapp/public/packs/
+railsapp/node_modules/
+railsapp/.bundle/
+railsapp/vendor/bundle/
+railsapp/db/*.sqlite3
+railsapp/db/*.sqlite3-*
+railsapp/config/master.key
+railsapp/config/credentials/*.key
+
+# Flutter固有
+flutterapp/.dart_tool/
+flutterapp/.packages
+flutterapp/build/
+flutterapp/.flutter-plugins
+flutterapp/.flutter-plugins-dependencies
+flutterapp/.pub-cache/
+flutterapp/.pub/
+flutterapp/coverage/
+flutterapp/*.iml
+flutterapp/*.ipr
+flutterapp/*.iws
+
+# テスト結果
+coverage/
+test-results/
+*.coverage
+
+# デバッグ
+*.pid
+core
+core.*
+*.dump

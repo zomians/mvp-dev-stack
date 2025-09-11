@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Rails Entrypoint Starting..."
+echo "🚀 Rails Entrypoint Starting (Container-First Version)..."
 
 # カラー出力用
 RED='\033[0;31m'
@@ -30,19 +30,22 @@ check_rails_app() {
     return 0
 }
 
-# 新規Railsアプリケーション生成
+# 新規Railsアプリケーション生成（コンテナ内で実行）
 generate_rails_app() {
-    log_info "Generating new Rails application..."
+    log_info "No Rails application found. Generating new application..."
     
-    # 一時的にカレントディレクトリの内容を退避
-    if [ "$(ls -A)" ]; then
-        log_warn "Directory not empty, backing up existing files..."
-        mkdir -p /tmp/backup
-        mv * /tmp/backup/ 2>/dev/null || true
-        mv .* /tmp/backup/ 2>/dev/null || true
+    # 現在のディレクトリが空でない場合の対処
+    if [ "$(ls -A 2>/dev/null | grep -v '^\.')" ]; then
+        log_warn "Directory contains files. Creating Rails app with --force option..."
     fi
     
-    # Rails new実行
+    # Railsインストール（必要な場合）
+    if ! command -v rails &> /dev/null; then
+        log_info "Installing Rails..."
+        gem install rails -v ${RAILS_VERSION:-8.0.2.1}
+    fi
+    
+    # Rails new実行（現在のディレクトリに作成）
     rails new . \
         --database=sqlite3 \
         --javascript=bun \
@@ -52,6 +55,10 @@ generate_rails_app() {
         --force
     
     log_info "Rails application generated successfully!"
+    
+    # 生成後すぐに必要な設定
+    bundle config set --local path '/usr/local/bundle'
+    bundle config set --local without 'production'
 }
 
 # 依存関係のインストール
@@ -124,7 +131,8 @@ EOF
     # メール設定（MailCatcher使用）
     if [ -n "$MAILCATCHER_HOST" ] || [ -f "/.dockerenv" ]; then
         log_info "Configuring MailCatcher..."
-        cat >> config/environments/development.rb << 'EOF'
+        if ! grep -q "mailcatcher" config/environments/development.rb 2>/dev/null; then
+            cat >> config/environments/development.rb << 'EOF'
 
 # MailCatcher configuration
 Rails.application.configure do
@@ -136,6 +144,7 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = false
 end
 EOF
+        fi
     fi
 }
 
@@ -177,18 +186,30 @@ EOF
     fi
 }
 
+# 初回起動フラグファイル
+INITIALIZED_FLAG="/app/.rails_initialized"
+
 # メイン処理
 main() {
     cd /app
     
-    # Railsアプリケーションの確認
-    if ! check_rails_app; then
-        log_error "Rails application not found!"
-        log_error "Please run 'make init' first to generate the Rails application."
-        exit 1
+    # 初回起動時の処理
+    if [ ! -f "$INITIALIZED_FLAG" ]; then
+        log_info "First time setup detected..."
+        
+        # Railsアプリケーションの確認と生成
+        if ! check_rails_app; then
+            generate_rails_app
+        fi
+        
+        # 初回セットアップ完了フラグ
+        touch "$INITIALIZED_FLAG"
+        log_info "Initial setup completed!"
+    else
+        log_info "Rails application already initialized."
     fi
     
-    # 環境セットアップ
+    # 環境セットアップ（毎回実行）
     install_dependencies
     setup_database
     setup_development

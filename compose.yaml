@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.rails
-      target: development
       args:
         RUBY_VERSION: 3.4.5
         RAILS_VERSION: 8.0.2.1
@@ -45,12 +44,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.flutter
-      target: development
+      target: development  # 開発用ステージを明示的に指定
       args:
         FLUTTER_VERSION: 3.32.5
     ports:
       - "8080:8080"
-      - "9100:9100" # Observatory debugger
+      - "9100:9100"  # Observatory debugger
     volumes:
       - ./flutterapp:/app
       - flutter_pub_cache:/root/.pub-cache
@@ -61,15 +60,7 @@ services:
       - FLUTTER_WEB_PORT=8080
       - FLUTTER_WEB_HOSTNAME=0.0.0.0
     entrypoint: /usr/local/bin/flutter-entrypoint.sh
-    command:
-      [
-        "flutter",
-        "run",
-        "-d",
-        "web-server",
-        "--web-hostname=0.0.0.0",
-        "--web-port=8080",
-      ]
+    command: ["flutter", "run", "-d", "web-server", "--web-hostname=0.0.0.0", "--web-port=8080"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 30s
@@ -84,7 +75,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -100,8 +91,8 @@ services:
   mailcatcher:
     image: schickling/mailcatcher:latest
     ports:
-      - "1080:1080" # Web UI
-      - "1025:1025" # SMTP
+      - "${MAILCATCHER_WEB_PORT:-1080}:1080"  # Web UI
+      - "${MAILCATCHER_SMTP_PORT:-1025}:1025"  # SMTP
     networks:
       - mvp-network
 

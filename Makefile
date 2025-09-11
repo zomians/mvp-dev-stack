@@ -98,7 +98,12 @@ health: ## ヘルスチェック
 	@echo "Flutter: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 || echo 'DOWN')"
 
 # ワンライナー初期起動
-quickstart: init build up ## 初回セットアップ＆起動
+quickstart: init build up ## 初回セットアップ＆起動（アプローチ1）
+	@echo "🎉 MVP is ready!"
+	@echo "Rails: http://localhost:3000"
+	@echo "Flutter: http://localhost:8080"
+
+quickstart-container: init-container build up ## 初回セットアップ＆起動（アプローチ2）
 	@echo "🎉 MVP is ready!"
 	@echo "Rails: http://localhost:3000"
 	@echo "Flutter: http://localhost:8080"
@@ -109,6 +114,13 @@ debug-rails: ## Railsデバッグモード
 
 debug-flutter: ## Flutterデバッグモード
 	@docker compose exec flutter flutter run -d web-server --web-hostname=0.0.0.0 --web-port=8080 --debug
+
+# 環境別起動
+up-staging: ## ステージング環境で起動
+	@docker compose --env-file .env.staging up -d
+
+up-production: ## 本番環境で起動
+	@docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d
 
 # 本番環境
 prod-build: ## 本番イメージをビルド
