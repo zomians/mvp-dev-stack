@@ -10,7 +10,7 @@ help: ## ヘルプを表示
 # 初期化
 init: ## プロジェクト初期化（Rails/Flutter生成）
 	@echo "🚀 Initializing MVP project..."
-	@[ -d railsapp ] || docker run --rm -v $${PWD}:/app -w /app ruby:3.4.5 bash -c "gem install rails -v 8.0.2.1 && rails new railsapp --database=sqlite3 --javascript=bun --css=tailwind --skip-git"
+	@[ -d railsapp ] || docker run --rm -v $${PWD}:/app -w /app ruby:3.4.5 bash -c "gem install rails -v 8.0.2.1 && rails new railsapp --database=sqlite3 --javascript=bun --css=tailwind --skip-git --skip-bundle"
 	@[ -d flutterapp ] || docker run --rm -v $${PWD}:/app -w /app ghcr.io/cirruslabs/flutter:3.32.5 flutter create flutterapp
 	@echo "✅ Project initialized"
 
