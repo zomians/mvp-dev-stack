@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.rails
+      target: development
       args:
         RUBY_VERSION: 3.4.5
         RAILS_VERSION: 8.0.2.1
@@ -26,7 +27,7 @@ services:
       - WEB_CONCURRENCY=2
       - RAILS_MAX_THREADS=5
     entrypoint: /usr/local/bin/rails-entrypoint.sh
-    command: ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+    command: ["bin/rails", "server", "-b", "0.0.0.0"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
       interval: 30s
@@ -44,12 +45,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.flutter
-      target: development  # 開発用ステージを明示的に指定
+      target: development
       args:
         FLUTTER_VERSION: 3.32.5
     ports:
       - "8080:8080"
-      - "9100:9100"  # Observatory debugger
+      - "9100:9100" # Observatory debugger
     volumes:
       - ./flutterapp:/app
       - flutter_pub_cache:/root/.pub-cache
@@ -60,7 +61,15 @@ services:
       - FLUTTER_WEB_PORT=8080
       - FLUTTER_WEB_HOSTNAME=0.0.0.0
     entrypoint: /usr/local/bin/flutter-entrypoint.sh
-    command: ["flutter", "run", "-d", "web-server", "--web-hostname=0.0.0.0", "--web-port=8080"]
+    command:
+      [
+        "flutter",
+        "run",
+        "-d",
+        "web-server",
+        "--web-hostname=0.0.0.0",
+        "--web-port=8080",
+      ]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 30s
@@ -91,8 +100,8 @@ services:
   mailcatcher:
     image: schickling/mailcatcher:latest
     ports:
-      - "${MAILCATCHER_WEB_PORT:-1080}:1080"  # Web UI
-      - "${MAILCATCHER_SMTP_PORT:-1025}:1025"  # SMTP
+      - "${MAILCATCHER_WEB_PORT:-1080}:1080" # Web UI
+      - "${MAILCATCHER_SMTP_PORT:-1025}:1025" # SMTP
     networks:
       - mvp-network
 
