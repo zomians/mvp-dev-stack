@@ -99,7 +99,7 @@ EXPOSE 3000
 
 # エントリポイント設定
 ENTRYPOINT ["/usr/local/bin/rails-entrypoint.sh"]
-CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+CMD ["bin/rails", "server", "-b", "0.0.0.0"]
 
 # ========================================
 # Stage 4: Production build (optional)
