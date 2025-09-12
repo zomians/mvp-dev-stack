@@ -1,7 +1,7 @@
 # MVP Development Lifecycle Automation
 # Rails 8.0.2.1 + Flutter 3.32.5
 
-.PHONY: help init build up down clean test deploy logs shell
+.PHONY: help init build up down clean test deploy logs shell new
 
 # デフォルトターゲット
 help: ## ヘルプを表示
@@ -99,8 +99,8 @@ health: ## ヘルスチェック
 	@echo "Rails: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/up || echo 'DOWN')"
 	@echo "Flutter: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 || echo 'DOWN')"
 
-# ワンライナー初期起動
-quickstart: init build up ## 初回セットアップ＆起動（アプローチ1）
+# 新規セットアップ＆起動
+new: init up
 	@echo "🎉 MVP is ready!"
 	@echo "Rails: http://localhost:3000"
 	@echo "Flutter: http://localhost:8080"

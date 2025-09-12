@@ -25,7 +25,7 @@ git clone https://github.com/zomians/myapp.git
 cd myapp
 
 # 初回セットアップ＆起動
-make quickstart
+make new
 ```
 
 ## 🔗 アクセス URL
