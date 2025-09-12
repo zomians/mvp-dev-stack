@@ -24,10 +24,7 @@ Rails 8 + Flutter による高速 MVP 開発環境
 git clone https://github.com/zomians/myapp.git
 cd myapp
 
-# 環境変数設定
-cp .env.example .env
-
-# 初回セットアップ＆起動（ホスト側で生成）
+# 初回セットアップ＆起動
 make quickstart
 ```
 
