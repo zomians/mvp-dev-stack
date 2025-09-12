@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Flutter Entrypoint Starting..."
+echo "🚀 Flutter Entrypoint Starting (Container-First Version)..."
 
 # カラー出力用
 RED='\033[0;31m'
@@ -37,26 +37,30 @@ check_flutter_app() {
     return 0
 }
 
-# 新規Flutterアプリケーション生成
+# 新規Flutterアプリケーション生成（コンテナ内で実行）
 generate_flutter_app() {
-    log_info "Generating new Flutter application..."
+    log_info "No Flutter application found. Generating new application..."
     
-    # 一時的にカレントディレクトリの内容を退避
-    if [ "$(ls -A)" ]; then
-        log_warn "Directory not empty, backing up existing files..."
+    # 現在のディレクトリが空でない場合の対処
+    if [ "$(ls -A 2>/dev/null | grep -v '^\.')" ]; then
+        log_warn "Directory contains files. Creating Flutter app with force option..."
+        # 一時的に既存ファイルを退避
         mkdir -p /tmp/backup
-        mv * /tmp/backup/ 2>/dev/null || true
-        mv .* /tmp/backup/ 2>/dev/null || true
+        find . -maxdepth 1 ! -name '.*' -exec mv {} /tmp/backup/ \; 2>/dev/null || true
     fi
     
-    # Flutter create実行
+    # Flutter create実行（現在のディレクトリに作成）
     flutter create . \
         --project-name=flutterapp \
         --org=com.mvp \
         --platforms=web \
-        --template=app
+        --template=app \
+        --overwrite
     
     log_info "Flutter application generated successfully!"
+    
+    # 初期依存関係の取得
+    flutter pub get
 }
 
 # 依存関係のインストール
@@ -247,18 +251,30 @@ cleanup_cache() {
     fi
 }
 
+# 初回起動フラグファイル
+INITIALIZED_FLAG="/app/.flutter_initialized"
+
 # メイン処理
 main() {
     cd /app
     
-    # Flutterアプリケーションの確認
-    if ! check_flutter_app; then
-        log_error "Flutter application not found!"
-        log_error "Please run 'make init' first to generate the Flutter application."
-        exit 1
+    # 初回起動時の処理
+    if [ ! -f "$INITIALIZED_FLAG" ]; then
+        log_info "First time setup detected..."
+        
+        # Flutterアプリケーションの確認と生成
+        if ! check_flutter_app; then
+            generate_flutter_app
+        fi
+        
+        # 初回セットアップ完了フラグ
+        touch "$INITIALIZED_FLAG"
+        log_info "Initial setup completed!"
+    else
+        log_info "Flutter application already initialized."
     fi
     
-    # 環境セットアップ
+    # 環境セットアップ（毎回実行）
     run_flutter_doctor
     install_dependencies
     add_http_packages

@@ -103,11 +103,6 @@ quickstart: init build up ## 初回セットアップ＆起動（アプローチ
 	@echo "Rails: http://localhost:3000"
 	@echo "Flutter: http://localhost:8080"
 
-quickstart-container: init-container build up ## 初回セットアップ＆起動（アプローチ2）
-	@echo "🎉 MVP is ready!"
-	@echo "Rails: http://localhost:3000"
-	@echo "Flutter: http://localhost:8080"
-
 # デバッグ
 debug-rails: ## Railsデバッグモード
 	@docker compose exec rails bundle exec rails server -b 0.0.0.0 -p 3000 --debug

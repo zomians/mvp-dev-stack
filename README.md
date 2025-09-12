@@ -1,14 +1,14 @@
 # MVP Development Stack
 
-Rails 8 + Flutter による高速MVP開発環境
+Rails 8 + Flutter による高速 MVP 開発環境
 
 ## 🎯 特徴
 
 - **ゼロコンフィグ起動**: アプリケーション未作成でも自動生成
 - **マルチステージビルド**: 開発/本番環境の最適化
-- **ホットリロード**: Rails/Flutter両方で開発効率最大化
-- **API連携済み**: Flutter→Rails API接続設定済み
-- **ワンライナー操作**: Makefileによる仕組み化
+- **ホットリロード**: Rails/Flutter 両方で開発効率最大化
+- **API 連携済み**: Flutter→Rails API 接続設定済み
+- **ワンライナー操作**: Makefile による仕組み化
 
 ## 📋 必要要件
 
@@ -19,7 +19,7 @@ Rails 8 + Flutter による高速MVP開発環境
 
 ## 🚀 クイックスタート
 
-### アプローチ1: ホスト側で初期化（推奨）
+### アプローチ 1: ホスト側で初期化（推奨）
 
 ```bash
 # リポジトリをクローン
@@ -33,46 +33,14 @@ cp .env.example .env
 make quickstart
 ```
 
-### アプローチ2: コンテナ内で初期化
+## 🔗 アクセス URL
 
-```bash
-# リポジトリをクローン
-git clone <repository-url>
-cd myapp
-
-# 環境変数設定
-cp .env.example .env
-
-# ディレクトリ作成のみ
-make init-container
-
-# entrypoint-v2を使用する場合は、script/配下のファイルを入れ替え
-cp script/rails-entrypoint-v2.sh script/rails-entrypoint.sh
-cp script/flutter-entrypoint-v2.sh script/flutter-entrypoint.sh
-
-# ビルド＆起動（コンテナ内で自動生成）
-make build
-make up
-```
-
-## 🔀 2つのアプローチの違い
-
-| 項目 | アプローチ1（ホスト側） | アプローチ2（コンテナ内） |
-|------|------------------------|-------------------------|
-| **初期化方法** | `make init`でホスト側生成 | コンテナ起動時に自動生成 |
-| **entrypoint** | アプリ存在前提 | アプリなしでも自動生成 |
-| **メリット** | シンプル、高速 | 環境非依存、自動化 |
-| **デメリット** | ホストにRuby/Flutter必要 | 初回起動が遅い |
-| **推奨用途** | 通常の開発 | CI/CD、チーム開発 |
-
-## 🔗 アクセスURL
-
-| サービス | URL | 説明 |
-|---------|-----|------|
-| Rails | http://localhost:3000 | バックエンドAPI |
-| Flutter | http://localhost:8080 | フロントエンドUI |
-| MailCatcher | http://localhost:1080 | メール確認UI |
-| Redis | localhost:6379 | キャッシュ/キュー |
+| サービス    | URL                   | 説明              |
+| ----------- | --------------------- | ----------------- |
+| Rails       | http://localhost:3000 | バックエンド API  |
+| Flutter     | http://localhost:8080 | フロントエンド UI |
+| MailCatcher | http://localhost:1080 | メール確認 UI     |
+| Redis       | localhost:6379        | キャッシュ/キュー |
 
 ## 📁 プロジェクト構成
 
@@ -177,34 +145,37 @@ make clean-all     # プロジェクトファイルも削除
 
 `.env`ファイルで以下を設定可能：
 
-- `RAILS_ENV`: Rails環境（development/production）
-- `SECRET_KEY_BASE`: Rails秘密鍵
-- `DATABASE_URL`: データベース接続URL
+- `RAILS_ENV`: Rails 環境（development/production）
+- `SECRET_KEY_BASE`: Rails 秘密鍵
+- `DATABASE_URL`: データベース接続 URL
 - `API_BASE_URL`: Flutter→Rails API URL
-- `FLUTTER_WEB_PORT`: Flutter開発サーバーポート
+- `FLUTTER_WEB_PORT`: Flutter 開発サーバーポート
 
 ### マルチステージビルド
 
-各Dockerfileには以下のステージがあります：
+各 Dockerfile には以下のステージがあります：
 
 **Dockerfile.rails**
+
 - `base`: 基本依存関係
 - `dependencies`: 依存関係ビルダー
 - `development`: 開発環境（デフォルト）
 - `production`: 本番環境
 
 **Dockerfile.flutter**
+
 - `flutter-base`: Flutter SDK
 - `dependencies`: 依存関係ビルダー
 - `development`: 開発環境（デフォルト）
 - `web-builder`: 本番ビルド
-- `production`: Nginxサーバー
+- `production`: Nginx サーバー
 
-### API連携
+### API 連携
 
-FlutterからRails APIへの接続は自動設定されます：
-- `lib/config/api_config.dart`: API設定
-- `lib/services/api_service.dart`: APIサービス
+Flutter から Rails API への接続は自動設定されます：
+
+- `lib/config/api_config.dart`: API 設定
+- `lib/services/api_service.dart`: API サービス
 
 ## 📝 開発フロー
 
@@ -272,7 +243,7 @@ make prod-build
 make prod-deploy
 ```
 
-### 3. SSL設定（Let's Encrypt）
+### 3. SSL 設定（Let's Encrypt）
 
 ```bash
 # Certbot実行
@@ -309,7 +280,7 @@ rails db:drop db:create db:migrate
 exit
 ```
 
-### Flutter依存関係エラー
+### Flutter 依存関係エラー
 
 ```bash
 make shell-flutter
