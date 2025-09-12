@@ -17,7 +17,7 @@ Rails 8 + Flutter による高速 MVP 開発環境
 - Make
 - Git
 
-## 🚀 クイックスタート
+## 🚀 はじめよう
 
 ```bash
 # リポジトリをクローン
@@ -25,7 +25,7 @@ git clone https://github.com/zomians/myapp.git
 cd myapp
 
 # 初回セットアップ＆起動
-make new
+make world
 ```
 
 ## 🔗 アクセス URL
@@ -41,24 +41,26 @@ make new
 
 ```
 myapp/
-├── Makefile                    # オーケストレーション
-├── compose.yaml               # 開発環境設定
-├── compose.production.yaml    # 本番環境設定
-├── .env.example              # 環境変数例
+├── Makefile                       # オーケストレーション
+├── compose.yaml                   # 開発環境設定
+├── compose.override.yaml.example  # 上書き例
+├── compose.production.yaml        # 本番環境設定
+├── .env.example                   # 環境変数例
+├── .gitignore                     # バージョン非管理
 │
 ├── Dockerfile.rails          # Railsマルチステージビルド
 ├── Dockerfile.flutter        # Flutterマルチステージビルド
 │
 ├── script/
-│   ├── rails-entrypoint.sh  # Rails初期化スクリプト
-│   └── flutter-entrypoint.sh # Flutter初期化スクリプト
+│   ├── rails-entrypoint.sh   # Rails エントリポイント
+│   └── flutter-entrypoint.sh # Flutter エントリポイント
 │
 ├── nginx/
 │   └── conf.d/
 │       └── default.conf      # Nginx設定
 │
 ├── railsapp/                 # Railsアプリケーション
-└── flutterapp/              # Flutterアプリケーション
+└── flutterapp/               # Flutterアプリケーション
 ```
 
 ## 🛠 主要コマンド
@@ -67,7 +69,7 @@ myapp/
 
 ```bash
 make help         # ヘルプ表示
-make init         # プロジェクト初期化
+make init         # 初期ファイル生成
 make build        # イメージビルド
 make up           # サービス起動
 make down         # サービス停止
