@@ -51,7 +51,6 @@ generate_rails_app() {
         --javascript=bun \
         --css=tailwind \
         --skip-git \
-        --skip-test \
         --force
     
     log_info "Rails application generated successfully!"
