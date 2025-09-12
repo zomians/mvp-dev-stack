@@ -74,7 +74,7 @@ test-flutter: ## Flutterテストのみ
 
 # クリーンアップ
 clean: ## 全コンテナ/ボリューム削除
-	@docker compose down --volumes --remove-orphans --rmi all
+	@docker compose down --volumes --remove-orphans
 	@docker system prune -f
 
 clean-all: clean ## プロジェクトファイルも削除
