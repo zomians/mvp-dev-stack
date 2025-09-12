@@ -19,8 +19,6 @@ Rails 8 + Flutter による高速 MVP 開発環境
 
 ## 🚀 クイックスタート
 
-### アプローチ 1: ホスト側で初期化（推奨）
-
 ```bash
 # リポジトリをクローン
 git clone <repository-url>
