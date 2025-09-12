@@ -21,7 +21,7 @@ Rails 8 + Flutter による高速 MVP 開発環境
 
 ```bash
 # リポジトリをクローン
-git clone <repository-url>
+git clone https://github.com/zomians/myapp.git
 cd myapp
 
 # 環境変数設定
