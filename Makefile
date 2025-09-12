@@ -28,7 +28,9 @@ up: ## サービス起動
 down: ## サービス停止
 	@docker compose down
 
-restart: down up ## サービス再起動
+restart: down build-nocache up ## サービス再起動
+	@echo "🔄 Services restarted"
+	@make logs-tail
 
 # ログ管理
 logs: ## 全ログ表示
@@ -72,7 +74,7 @@ test-flutter: ## Flutterテストのみ
 
 # クリーンアップ
 clean: ## 全コンテナ/ボリューム削除
-	@docker compose down -v --remove-orphans
+	@docker compose down --volumes --remove-orphans
 	@docker system prune -f
 
 clean-all: clean ## プロジェクトファイルも削除
@@ -81,7 +83,7 @@ clean-all: clean ## プロジェクトファイルも削除
 
 # デプロイ準備
 assets: ## アセットプリコンパイル
-	@docker compose exec rails bundle exec rails assets:precompile
+	@docker compose exec rails bin/rails assets:precompile
 
 flutter-build: ## Flutter本番ビルド
 	@docker compose exec flutter flutter build web --release
@@ -105,7 +107,7 @@ quickstart: init build up ## 初回セットアップ＆起動（アプローチ
 
 # デバッグ
 debug-rails: ## Railsデバッグモード
-	@docker compose exec rails bundle exec rails server -b 0.0.0.0 -p 3000 --debug
+	@docker compose exec rails bin/rails server -b 0.0.0.0 -p 3000 --debug
 
 debug-flutter: ## Flutterデバッグモード
 	@docker compose exec flutter flutter run -d web-server --web-hostname=0.0.0.0 --web-port=8080 --debug
