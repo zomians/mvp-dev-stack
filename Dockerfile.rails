@@ -74,13 +74,6 @@ RUN apt-get update -qq && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Rails環境変数設定
-ENV RAILS_ENV=development \
-    BUNDLE_PATH=/usr/local/bundle \
-    BUNDLE_WITHOUT=production \
-    RAILS_LOG_TO_STDOUT=true \
-    RAILS_SERVE_STATIC_FILES=true
-
 # Bundle/Node設定
 COPY --from=dependencies /usr/local/bundle /usr/local/bundle
 COPY --from=dependencies /app/node_modules* /app/node_modules
