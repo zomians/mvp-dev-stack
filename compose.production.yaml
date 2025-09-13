@@ -6,7 +6,7 @@ name: mvp-production
 services:
   rails:
     build:
-      target: production  # 本番用ステージを使用
+      target: production # 本番用ステージを使用
       cache_from:
         - type=registry,ref=myapp/rails:cache
       cache_to:
@@ -14,7 +14,7 @@ services:
     environment:
       - RAILS_ENV=production
       - RAILS_LOG_LEVEL=info
-      - RAILS_SERVE_STATIC_FILES=false  # Nginxから配信
+      - RAILS_SERVE_STATIC_FILES=false # Nginxから配信
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
       - DATABASE_URL=${DATABASE_URL:-sqlite3:db/production.sqlite3}
     volumes:
@@ -24,15 +24,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 2G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
 
   flutter:
     build:
-      target: production  # Nginx本番ステージを使用
+      target: production # Nginx本番ステージを使用
       cache_from:
         - type=registry,ref=myapp/flutter:cache
       cache_to:
@@ -43,10 +43,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 512M
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 128M
 
   nginx:
@@ -66,19 +66,10 @@ services:
     networks:
       - mvp-network
 
-  redis:
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-
   # 本番環境ではmailcatcherを削除
   mailcatcher:
     deploy:
-      replicas: 0  # 本番環境では無効化
+      replicas: 0 # 本番環境では無効化
 
 volumes:
   rails_storage_prod:
