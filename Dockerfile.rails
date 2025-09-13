@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 ARG RUBY_VERSION=3.4.5
+ARG RAILS_VERSION=8.0.2.1
 ARG NODE_VERSION=20
 
 # ========================================
-# Stage 1: Base dependencies
+# Base Image
 # ========================================
 FROM ruby:${RUBY_VERSION}-slim AS base
 
@@ -32,12 +33,19 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 
 WORKDIR /app
 
+# ==============================================
+# Setup Stage: Rails setup
+# ==============================================
+FROM base AS setup
+
+RUN gem install rails -v ${RAILS_VERSION} --no-document
+
 # ========================================
-# Stage 2: Dependencies builder
+# Dependencies Stage
 # ========================================
 FROM base AS dependencies
 
-# Gemfile関連のコピー（存在チェック付き）
+# Gemfile関連のコピー
 COPY railsapp/Gemfile* ./
 
 # Bundle install（Gemfileが存在する場合のみ）
