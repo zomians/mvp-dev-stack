@@ -29,7 +29,7 @@ services:
       - WEB_CONCURRENCY=2
       - RAILS_MAX_THREADS=5
     entrypoint: /usr/local/bin/rails-entrypoint.sh
-    command: ["bin/dev", "-b", "0.0.0.0"]
+    command: ["bin/rails", "server", "-b", "0.0.0.0"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
       interval: 30s
