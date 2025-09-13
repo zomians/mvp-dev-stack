@@ -54,8 +54,12 @@ RUN bundle install --jobs 4 --retry 3;
 # package.json関連のコピー
 COPY railsapp/package*.json railsapp/bun.lockb* ./
 
-# Bun install
-RUN bun install --frozen-lockfile || bun install;
+# Bun install（package.jsonが存在する場合のみ）
+RUN if [ -f package.json ]; then \
+      bun install --frozen-lockfile || bun install; \
+    else \
+      echo "package.json not found, skipping bun install"; \
+    fi
 
 # ========================================
 # Development Stage
