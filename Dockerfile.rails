@@ -48,24 +48,14 @@ FROM base AS dependencies
 # Gemfile関連のコピー
 COPY railsapp/Gemfile* ./
 
-# Bundle install（Gemfileが存在する場合のみ）
-RUN if [ -f Gemfile ]; then \
-      bundle config set --local deployment false && \
-      bundle config set --local without 'production' && \
-      bundle install --jobs 4 --retry 3; \
-    else \
-      echo "Gemfile not found, skipping bundle install"; \
-    fi
+# Bundle install
+RUN bundle install --jobs 4 --retry 3;
 
-# package.json関連のコピー（存在チェック付き）
+# package.json関連のコピー
 COPY railsapp/package*.json railsapp/bun.lockb* ./
 
-# Bun install（package.jsonが存在する場合のみ）
-RUN if [ -f package.json ]; then \
-      bun install --frozen-lockfile || bun install; \
-    else \
-      echo "package.json not found, skipping bun install"; \
-    fi
+# Bun install
+RUN bun install --frozen-lockfile || bun install;
 
 # ========================================
 # Stage 3: Development image
