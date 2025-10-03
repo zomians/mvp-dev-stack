@@ -21,11 +21,11 @@ Rails 8 + Flutter による高速 MVP 開発環境
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/zomians/myapp.git
-cd myapp
+git clone https://github.com/zomians/mvp-dev-stack.git
+cd mvp-dev-stack
 
 # 初回セットアップ＆起動
-make world
+# make ...メンテナンス中
 ```
 
 ## 🔗 アクセス URL
@@ -35,32 +35,24 @@ make world
 | Rails       | http://localhost:3000 | バックエンド API  |
 | Flutter     | http://localhost:8080 | フロントエンド UI |
 | MailCatcher | http://localhost:1080 | メール確認 UI     |
-| Redis       | localhost:6379        | キャッシュ/キュー |
 
 ## 📁 プロジェクト構成
 
 ```
-myapp/
+mvp-dev-stack/
 ├── Makefile                       # オーケストレーション
-├── compose.yaml                   # 開発環境設定
-├── compose.override.yaml.example  # 上書き例
-├── compose.production.yaml        # 本番環境設定
-├── .env.example                   # 環境変数例
-├── .gitignore                     # バージョン非管理
+├── compose.development.yaml       # 開発環境の起動ファイル
+├── .env.development               # 開発環境用の環境変数
 │
-├── Dockerfile.rails          # Railsマルチステージビルド
-├── Dockerfile.flutter        # Flutterマルチステージビルド
+├── Dockerfile.rails               # Railsマルチステージビルド
+├── Dockerfile.flutter             # Flutterマルチステージビルド
 │
-├── script/
-│   ├── rails-entrypoint.sh   # Rails エントリポイント
-│   └── flutter-entrypoint.sh # Flutter エントリポイント
+├── scripts/
+│   ├── rails-entrypoint.sh        # Rails エントリポイント
+│   └── flutter-entrypoint.sh      # Flutter エントリポイント
 │
-├── nginx/
-│   └── conf.d/
-│       └── default.conf      # Nginx設定
-│
-├── railsapp/                 # Railsアプリケーション
-└── flutterapp/               # Flutterアプリケーション
+├── railsapp/                      # Railsアプリケーション
+└── flutterapp/                    # Flutterアプリケーション
 ```
 
 ## 🛠 主要コマンド
@@ -138,35 +130,6 @@ make clean-all     # プロジェクトファイルも削除
 
 ## 🔧 カスタマイズ
 
-### 環境変数
-
-`.env`ファイルで以下を設定可能：
-
-- `RAILS_ENV`: Rails 環境（development/production）
-- `SECRET_KEY_BASE`: Rails 秘密鍵
-- `DATABASE_URL`: データベース接続 URL
-- `API_BASE_URL`: Flutter→Rails API URL
-- `FLUTTER_WEB_PORT`: Flutter 開発サーバーポート
-
-### マルチステージビルド
-
-各 Dockerfile には以下のステージがあります：
-
-**Dockerfile.rails**
-
-- `base`: 基本依存関係
-- `dependencies`: 依存関係ビルダー
-- `development`: 開発環境（デフォルト）
-- `production`: 本番環境
-
-**Dockerfile.flutter**
-
-- `flutter-base`: Flutter SDK
-- `dependencies`: 依存関係ビルダー
-- `development`: 開発環境（デフォルト）
-- `web-builder`: 本番ビルド
-- `production`: Nginx サーバー
-
 ### API 連携
 
 Flutter から Rails API への接続は自動設定されます：
@@ -226,7 +189,6 @@ make test-flutter
 
 ```bash
 # .env.productionを作成
-cp .env.example .env.production
 # 本番用の値を設定
 ```
 
