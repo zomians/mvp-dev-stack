@@ -1,142 +1,41 @@
 # syntax=docker/dockerfile:1
-ARG RUBY_VERSION=3.4.5
-ARG RAILS_VERSION=8.0.2.1
-ARG NODE_VERSION=20
 
-# ========================================
-# Base Image
-# ========================================
-FROM ruby:${RUBY_VERSION}-slim AS base
-
-# 基本パッケージインストール
-RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    git \
-    libsqlite3-dev \
-    libvips \
-    pkg-config \
-    libyaml-dev \
-    gnupg2 \
-    ca-certificates && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Node.jsとBunインストール
+ARG RUBY_VERSION
 ARG NODE_VERSION
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g bun@latest && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+ARG YARN_VERSION
+ARG BUNDLER_VERSION
 
-WORKDIR /app
+# 開発環境イメージ
+FROM ruby:${RUBY_VERSION}-slim AS development
 
-# ==============================================
-# Setup Stage: Rails setup
-# ==============================================
-FROM base AS setup
+## システムパッケージインストール
+RUN apt-get update -qq \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        git \
+        libyaml-dev \
+        ca-certificates \
+        curl \
+        gnupg \
+        vim \
+        less \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN gem install rails -v ${RAILS_VERSION} --no-document
+## Node.js, Yarn インストール
+ARG NODE_VERSION
+ARG YARN_VERSION
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+    | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$(echo ${NODE_VERSION} | cut -d. -f1).x nodistro main" \
+    > /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update -qq \
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable \
+    && corepack prepare yarn@${YARN_VERSION} --activate
 
-# ========================================
-# Dependencies Builder
-# ========================================
-FROM base AS dependencies
-
-# Gemfile関連のコピー
-COPY railsapp/Gemfile* ./
-
-# Bundle install
-RUN bundle install --jobs 4 --retry 3;
-
-# package.json関連のコピー
-COPY railsapp/package*.json railsapp/bun.lockb* ./
-
-# Bun install（package.jsonが存在する場合のみ）
-RUN if [ -f package.json ]; then \
-      bun install --frozen-lockfile || bun install; \
-    else \
-      echo "package.json not found, skipping bun install"; \
-    fi
-
-# ========================================
-# Development Stage
-# ========================================
-FROM base AS development
-
-# Rails用の追加パッケージ
-RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-    vim \
-    less \
-    postgresql-client \
-    redis-tools \
-    imagemagick \
-    ffmpeg && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Bundle/Node設定
-COPY --from=dependencies /usr/local/bundle /usr/local/bundle
-COPY --from=dependencies /app/node_modules* /app/node_modules
-
-# アプリケーションコード
-WORKDIR /app
-
-# エントリポイントスクリプトコピー
-COPY script/rails-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/rails-entrypoint.sh
-
-# ポート公開
-EXPOSE 3000
-
-# エントリポイント設定
-ENTRYPOINT ["/usr/local/bin/rails-entrypoint.sh"]
-CMD ["bin/dev", "-b", "0.0.0.0"]
-
-# ========================================
-# Production Build
-# ========================================
-FROM base AS production
-
-# Production用の最小限パッケージ
-RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-    libsqlite3-0 \
-    imagemagick \
-    libvips && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Rails環境変数設定
-ENV RAILS_ENV=production \
-    BUNDLE_WITHOUT=development:test \
-    RAILS_LOG_TO_STDOUT=true \
-    RAILS_SERVE_STATIC_FILES=true \
-    SECRET_KEY_BASE_DUMMY=1
-
-# アプリケーションユーザー作成
-RUN useradd -m -u 1000 rails && \
-    mkdir -p /app && \
-    chown -R rails:rails /app
-
-USER rails
-WORKDIR /app
-
-# Dependencies from builder
-COPY --from=dependencies --chown=rails:rails /usr/local/bundle /usr/local/bundle
-COPY --from=dependencies --chown=rails:rails /app/node_modules* /app/node_modules
-
-# Application code
-COPY --chown=rails:rails railsapp/ ./
-
-# アセットプリコンパイル（本番用）
-RUN if [ -f Gemfile ]; then \
-      bundle exec rails assets:precompile || echo "Skipping assets precompile"; \
-    fi
-
-EXPOSE 3000
-
-CMD ["bin/rails", "server", "-b", "0.0.0.0"]
+## Bundlerインストール
+ARG BUNDLER_VERSION
+RUN gem install bundler -v ${BUNDLER_VERSION}
