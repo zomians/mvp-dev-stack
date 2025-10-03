@@ -1,0 +1,40 @@
+name: mvp_development
+
+services:
+  railsservice:
+    build:
+      context: .
+      dockerfile: Dockerfile.rails
+      target: development
+      args:
+        - RUBY_VERSION=${RUBY_VERSION}
+        - NODE_VERSION=${NODE_VERSION}
+        - YARN_VERSION=${YARN_VERSION}
+        - BUNDLER_VERSION=${BUNDLER_VERSION}
+    env_file:
+      - .env.development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./${RAILS_APP_NAME}:/${RAILS_APP_NAME}
+      - rails_bundle:/usr/local/bundle
+      - rails_node_modules:/app/node_modules
+    command: >
+      bash -c "
+        cd /${RAILS_APP_NAME} &&
+        bundle _${BUNDLER_VERSION}_ install --jobs=4 --retry=3 &&
+        bin/dev
+      "
+    networks:
+      - mvp_network
+    stdin_open: true
+    tty: true
+
+volumes:
+  rails_bundle:
+  rails_node_modules:
+  flutter_pub_cache:
+
+networks:
+  mvp_network:
+    driver: bridge
