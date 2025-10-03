@@ -1,6 +1,6 @@
 # MVP Development Stack
 
-Rails 8 + Flutter による高速 MVP 開発環境
+Rails 8 + Flutter 3 による高速 MVP 開発環境
 
 ## 🎯 特徴
 
