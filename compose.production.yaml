@@ -1,7 +1,6 @@
 name: mvp-production
 
-# 本番環境用のオーバーライド設定
-# 使用方法: docker compose -f compose.yaml -f compose.production.yaml up
+# 使用方法: docker compose -f compose.production.yaml up
 
 services:
   rails:
