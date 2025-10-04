@@ -1,148 +1,142 @@
 # MVP Development Lifecycle Automation
-# Rails 8.0.2.1 + Flutter 3.32.5
+# Rails 8 + Flutter 3
 
-.PHONY: help init build up down clean test deploy logs shell world
+include .env.development
+export
 
-# デフォルトターゲット
-help: ## ヘルプを表示
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+# Colors for output
+YELLOW := \033[1;33m
+GREEN := \033[1;32m
+RED := \033[1;31m
+NC := \033[0m # No Color
 
-# 初期化
-init: ## プロジェクト初期化（Rails/Flutter生成）
-	@echo "🚀 Initializing MVP project..."
-	@[ -d railsapp ] || docker run --rm -v $${PWD}:/app -w /app ruby:3.4.5 bash -c "gem install rails -v 8.0.2.1 && rails _8.0.2.1_ new railsapp --database=sqlite3 --javascript=bun --css=tailwind --skip-git --skip-bundle"
-	@[ -d flutterapp ] || docker run --rm -v $${PWD}:/app -w /app ghcr.io/cirruslabs/flutter:3.32.5 flutter create flutterapp
-	@echo "✅ Project initialized"
+# Docker Compose command
+DC := docker compose -f compose.development.yaml --env-file .env.development
 
-# ビルド
-build: ## Dockerイメージをビルド
-	@docker compose build --parallel
+.PHONY: help
+help: ## ヘルプ表示
+	@echo "${GREEN}MVP Development Stack - Make Commands${NC}"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "${YELLOW}%-20s${NC} %s\n", $$1, $$2}'
 
+.PHONY: setup
+setup: build rails-new flutter-create up ## 初期セットアップ
+
+.PHONY: build
+build: ## Dockerイメージを全てビルド
+	@echo "${GREEN}Building Docker images...${NC}"
+	$(DC) build --parallel
+
+.PHONY: build-nocache
 build-nocache: ## キャッシュなしでビルド
-	@docker compose build --no-cache --parallel
+	$(DC) build --no-cache --parallel
 
-# 起動/停止
+.PHONY: up
 up: ## サービス起動
-	@docker compose up -d && echo "✅ Services started" && make logs-tail
-
-down: ## サービス停止
-	@docker compose down
-
-restart: down build-nocache up ## サービス再起動
-	@echo "🔄 Services restarted"
+	$(DC) up -d
+	@echo "${GREEN}Services started! Rails: http://localhost:${RAILS_PORT} Flutter: http://localhost:${FLUTTER_PORT}${NC}"
 	@make logs-tail
 
-# ログ管理
+.PHONY: down
+down: ## サービス停止
+	$(DC) down
+
+.PHONY: restart
+restart: down up ## サービス再起動
+	@echo "${GREEN}Services restarted!${NC}"
+	@make logs-tail
+
+.PHONY: logs
 logs: ## 全ログ表示
-	@docker compose logs
+	$(DC) logs -f
 
+.PHONY: logs-tail
 logs-tail: ## ログをtail表示
-	@docker compose logs -f --tail=50
+	$(DC) logs -f --tail=50
 
-logs-rails: ## Railsログのみ
-	@docker compose logs -f rails
-
-logs-flutter: ## Flutterログのみ
-	@docker compose logs -f flutter
-
-# 開発用コマンド
-shell-rails: ## Railsコンテナにシェル接続
-	@docker compose exec rails bash
-
-shell-flutter: ## Flutterコンテナにシェル接続
-	@docker compose exec flutter bash
-
-console: ## Rails consoleを起動
-	@docker compose exec rails bundle exec rails console
-
-migrate: ## DBマイグレーション実行
-	@docker compose exec rails bundle exec rails db:migrate
-
-seed: ## DBシード実行
-	@docker compose exec rails bundle exec rails db:seed
-
-# テスト
+.PHONY: test
 test: ## テスト実行
-	@docker compose exec rails bundle exec rails test
-	@docker compose exec flutter flutter test
+	$(DC) exec railsservice bundle exec rails test
+	$(DC) exec flutterservice flutter test
 
-test-rails: ## Railsテストのみ
-	@docker compose exec rails bundle exec rails test
-
-test-flutter: ## Flutterテストのみ
-	@docker compose exec flutter flutter test
-
-# クリーンアップ
+.PHONY: clean
 clean: ## 全コンテナ/ボリューム削除
-	@docker compose down --volumes --remove-orphans
-	@docker system prune -f
+	$(DC) down --volumes --remove-orphans
+	$(DC) system prune -f
+	@echo "${GREEN}Cleaned up all containers and volumes!${NC}"
 
-clean-all: clean ## プロジェクトファイルも削除
-	@rm -rf railsapp flutterapp
-	@echo "⚠️  All project files removed"
+.PHONY: rails-new
+rails-new: ## 新規Railsアプリ作成
+	@rm -rf ${RAILS_APP_NAME}
+	@echo "${GREEN}Creating new Rails application...${NC}"
+	@[ -d ${RAILS_APP_NAME} ] || \
+		$(DC) run --rm --no-deps railsservice bash -c " \
+			gem install rails -v ${RAILS_VERSION} \
+			&& rails new ${RAILS_APP_NAME} \
+				--database=sqlite3 \
+				--javascript=esbuild \
+				--css=tailwind \
+				--skip-git \
+		"
+	@echo "${GREEN}Rails app created successfully!${NC}"
 
-# デプロイ準備
-assets: ## アセットプリコンパイル
-	@docker compose exec rails bin/rails assets:precompile
+.PHONY: rails-shell
+rails-shell: ## Railsコンテナにシェル接続
+	$(DC) run --rm railsservice bash
 
-flutter-build: ## Flutter本番ビルド
-	@docker compose exec flutter flutter build web --release
+.PHONY: rails-migrate
+rails-migrate: ## DBマイグレーション実行
+	$(DC) exec railsservice bundle exec rails db:migrate
 
-deploy-prep: assets flutter-build ## デプロイ準備完了
-	@echo "✅ Deploy preparation complete"
+.PHONY: rails-routes
+rails-routes: ## ルーティング一覧表示
+	$(DC) exec railsservice bundle exec rails routes
 
-# ステータス確認
-status: ## サービスステータス確認
-	@docker compose ps
+.PHONY: bundle-install
+bundle-install: ## Run bundle install with specific version
+	$(DC) run --rm railsservice bash -c "bundle _${BUNDLER_VERSION}_ install"
+	@echo "${GREEN}Bundle installed successfully!${NC}"
 
-health: ## ヘルスチェック
-	@echo "Rails: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/up || echo 'DOWN')"
-	@echo "Flutter: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 || echo 'DOWN')"
+.PHONY: bundle-add
+bundle-add: ## Gem追加（例: make bundle-add gem=devise）
+ifndef gem
+	$(error "Please specify a gem name, e.g., make bundle-add gem=devise")
+endif
+	$(DC) run --rm railsservice bundle add $(gem)
+	@echo "${GREEN}Gem '$(gem)' added. Remember to run 'make rails-migrate' if needed.${NC}"
 
-# 新規セットアップ＆起動
-world: init up
-	@echo "🎉 MVP is ready!"
-	@echo "Rails: http://localhost:3000"
-	@echo "Flutter: http://localhost:8080"
+.PHONY: rails-generate
+rails-generate: ## Generate Rails code (usage: make rails-generate TYPE="scaffold" NAME="Post title:string")
+	@if [ -z "$(TYPE)" ] || [ -z "$(NAME)" ]; then \
+		echo "${RED}Usage: make rails-generate TYPE=\"scaffold\" NAME=\"Post title:string\"${NC}"; \
+		exit 1; \
+	fi
+	$(DC) run --rm railsservice bundle exec rails generate $(TYPE) $(NAME)
 
-# デバッグ
-debug-rails: ## Railsデバッグモード
-	@docker compose exec rails bin/rails server -b 0.0.0.0 -p 3000 --debug
+.PHONY: rails-test
+rails-test: ## Railsテストのみ
+	$(DC) exec railsservice bundle exec rails test
 
-debug-flutter: ## Flutterデバッグモード
-	@docker compose exec flutter flutter run -d web-server --web-hostname=0.0.0.0 --web-port=8080 --debug
+.PHONY: flutter-create
+flutter-create: ## Create new Flutter application
+	@echo "${GREEN}Creating new Flutter application...${NC}"
+	@[ -d ${FLUTTER_APP_NAME} ] || \
+		$(DC) run --rm --no-deps flutterservice flutter create --org com.mvp --project-name mvp_app .
+# 		docker run --rm -v $${PWD}:/app -w /app ghcr.io/cirruslabs/flutter:3.32.5 flutter create flutterapp
+	@echo "${GREEN}Flutter app created successfully!${NC}"
 
-# 環境別起動
-up-staging: ## ステージング環境で起動
-	@docker compose --env-file .env.staging up -d
+.PHONY: flutter-shell
+flutter-shell: ## Flutterコンテナにシェル接続
+	$(DC) exec flutterservice bash
 
-up-production: ## 本番環境で起動
-	@docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d
+.PHONY: flutter-clean
+flutter-clean: ## Clean Flutter build
+	$(DC) exec flutterservice flutter clean
 
-# 本番環境
-prod-build: ## 本番イメージをビルド
-	@docker compose -f compose.yaml -f compose.production.yaml build --parallel
+.PHONY: flutter-pub-get
+flutter-pub-get: ## Get Flutter dependencies
+	$(DC) exec flutterservice flutter pub get
 
-prod-up: ## 本番環境を起動
-	@docker compose -f compose.yaml -f compose.production.yaml up -d
-	@echo "✅ Production services started"
-
-prod-down: ## 本番環境を停止
-	@docker compose -f compose.yaml -f compose.production.yaml down
-
-prod-deploy: prod-build prod-up ## 本番デプロイ実行
-	@echo "🚀 Production deployed successfully"
-
-prod-logs: ## 本番環境のログ
-	@docker compose -f compose.yaml -f compose.production.yaml logs -f --tail=100
-	@mkdir -p backups
-	@docker compose exec rails bash -c "sqlite3 db/development.sqlite3 '.backup /tmp/backup.db'" 
-	@docker compose cp rails:/tmp/backup.db ./backups/backup_$$(date +%Y%m%d_%H%M%S).db
-	@echo "✅ Backup created"
-
-restore: ## 最新バックアップをリストア
-	@latest=$$(ls -t backups/*.db | head -1); \
-	[ -z "$$latest" ] && echo "❌ No backup found" && exit 1; \
-	docker compose cp $$latest rails:/tmp/restore.db && \
-	docker compose exec rails bash -c "sqlite3 db/development.sqlite3 '.restore /tmp/restore.db'" && \
-	echo "✅ Restored from $$latest"
+.PHONY: flutter-test
+flutter-test: ## Flutterテストのみ
+	$(DC) exec flutterservice flutter test
